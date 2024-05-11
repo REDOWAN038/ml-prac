@@ -1,1 +1,1780 @@
-{"metadata":{"kernelspec":{"language":"python","display_name":"Python 3","name":"python3"},"language_info":{"name":"python","version":"3.10.13","mimetype":"text/x-python","codemirror_mode":{"name":"ipython","version":3},"pygments_lexer":"ipython3","nbconvert_exporter":"python","file_extension":".py"},"kaggle":{"accelerator":"none","dataSources":[{"sourceId":73278,"databundleVersionId":8121328,"sourceType":"competition"}],"dockerImageVersionId":30698,"isInternetEnabled":true,"language":"python","sourceType":"notebook","isGpuEnabled":false}},"nbformat_minor":4,"nbformat":4,"cells":[{"cell_type":"code","source":"# This Python 3 environment comes with many helpful analytics libraries installed\n# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n# For example, here's several helpful packages to load\n\nimport numpy as np # linear algebra\nimport pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n\n# Input data files are available in the read-only \"../input/\" directory\n# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n\nimport os\nfor dirname, _, filenames in os.walk('/kaggle/input'):\n    for filename in filenames:\n        print(os.path.join(dirname, filename))\n\n# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session","metadata":{"_uuid":"8f2839f25d086af736a60e9eeb907d3b93b6e0e5","_cell_guid":"b1076dfc-b9ad-4769-8c92-a6c4dae69d19","execution":{"iopub.status.busy":"2024-05-11T11:27:15.374521Z","iopub.execute_input":"2024-05-11T11:27:15.374940Z","iopub.status.idle":"2024-05-11T11:27:16.704405Z","shell.execute_reply.started":"2024-05-11T11:27:15.374906Z","shell.execute_reply":"2024-05-11T11:27:16.702766Z"},"trusted":true},"execution_count":1,"outputs":[{"name":"stdout","text":"/kaggle/input/playground-series-s4e5/sample_submission.csv\n/kaggle/input/playground-series-s4e5/train.csv\n/kaggle/input/playground-series-s4e5/test.csv\n","output_type":"stream"}]},{"cell_type":"markdown","source":"","metadata":{}},{"cell_type":"markdown","source":"**Readin Data**","metadata":{}},{"cell_type":"code","source":"train_data = pd.read_csv('/kaggle/input/playground-series-s4e5/train.csv')\ntest_data = pd.read_csv('/kaggle/input/playground-series-s4e5/test.csv')\nsub_data = pd.read_csv('/kaggle/input/playground-series-s4e5/sample_submission.csv')","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:28:42.503071Z","iopub.execute_input":"2024-05-11T11:28:42.503681Z","iopub.status.idle":"2024-05-11T11:28:47.516138Z","shell.execute_reply.started":"2024-05-11T11:28:42.503647Z","shell.execute_reply":"2024-05-11T11:28:47.514926Z"},"trusted":true},"execution_count":2,"outputs":[]},{"cell_type":"markdown","source":"**Explore Train Data**","metadata":{}},{"cell_type":"code","source":"train_data.head()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:29:39.285118Z","iopub.execute_input":"2024-05-11T11:29:39.285736Z","iopub.status.idle":"2024-05-11T11:29:39.330307Z","shell.execute_reply.started":"2024-05-11T11:29:39.285689Z","shell.execute_reply":"2024-05-11T11:29:39.328864Z"},"trusted":true},"execution_count":3,"outputs":[{"execution_count":3,"output_type":"execute_result","data":{"text/plain":"   id  MonsoonIntensity  TopographyDrainage  RiverManagement  Deforestation  \\\n0   0                 5                   8                5              8   \n1   1                 6                   7                4              4   \n2   2                 6                   5                6              7   \n3   3                 3                   4                6              5   \n4   4                 5                   3                2              6   \n\n   Urbanization  ClimateChange  DamsQuality  Siltation  AgriculturalPractices  \\\n0             6              4            4          3                      3   \n1             8              8            3          5                      4   \n2             3              7            1          5                      4   \n3             4              8            4          7                      6   \n4             4              4            3          3                      3   \n\n   ...  DrainageSystems  CoastalVulnerability  Landslides  Watersheds  \\\n0  ...                5                     3           3           5   \n1  ...                7                     2           0           3   \n2  ...                7                     3           7           5   \n3  ...                2                     4           7           4   \n4  ...                2                     2           6           6   \n\n   DeterioratingInfrastructure  PopulationScore  WetlandLoss  \\\n0                            4                7            5   \n1                            5                3            3   \n2                            6                8            2   \n3                            4                6            5   \n4                            4                1            2   \n\n   InadequatePlanning  PoliticalFactors  FloodProbability  \n0                   7                 3             0.445  \n1                   4                 3             0.450  \n2                   3                 3             0.530  \n3                   7                 5             0.535  \n4                   3                 5             0.415  \n\n[5 rows x 22 columns]","text/html":"<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>id</th>\n      <th>MonsoonIntensity</th>\n      <th>TopographyDrainage</th>\n      <th>RiverManagement</th>\n      <th>Deforestation</th>\n      <th>Urbanization</th>\n      <th>ClimateChange</th>\n      <th>DamsQuality</th>\n      <th>Siltation</th>\n      <th>AgriculturalPractices</th>\n      <th>...</th>\n      <th>DrainageSystems</th>\n      <th>CoastalVulnerability</th>\n      <th>Landslides</th>\n      <th>Watersheds</th>\n      <th>DeterioratingInfrastructure</th>\n      <th>PopulationScore</th>\n      <th>WetlandLoss</th>\n      <th>InadequatePlanning</th>\n      <th>PoliticalFactors</th>\n      <th>FloodProbability</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>0</td>\n      <td>5</td>\n      <td>8</td>\n      <td>5</td>\n      <td>8</td>\n      <td>6</td>\n      <td>4</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>...</td>\n      <td>5</td>\n      <td>3</td>\n      <td>3</td>\n      <td>5</td>\n      <td>4</td>\n      <td>7</td>\n      <td>5</td>\n      <td>7</td>\n      <td>3</td>\n      <td>0.445</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>1</td>\n      <td>6</td>\n      <td>7</td>\n      <td>4</td>\n      <td>4</td>\n      <td>8</td>\n      <td>8</td>\n      <td>3</td>\n      <td>5</td>\n      <td>4</td>\n      <td>...</td>\n      <td>7</td>\n      <td>2</td>\n      <td>0</td>\n      <td>3</td>\n      <td>5</td>\n      <td>3</td>\n      <td>3</td>\n      <td>4</td>\n      <td>3</td>\n      <td>0.450</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>2</td>\n      <td>6</td>\n      <td>5</td>\n      <td>6</td>\n      <td>7</td>\n      <td>3</td>\n      <td>7</td>\n      <td>1</td>\n      <td>5</td>\n      <td>4</td>\n      <td>...</td>\n      <td>7</td>\n      <td>3</td>\n      <td>7</td>\n      <td>5</td>\n      <td>6</td>\n      <td>8</td>\n      <td>2</td>\n      <td>3</td>\n      <td>3</td>\n      <td>0.530</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>3</td>\n      <td>3</td>\n      <td>4</td>\n      <td>6</td>\n      <td>5</td>\n      <td>4</td>\n      <td>8</td>\n      <td>4</td>\n      <td>7</td>\n      <td>6</td>\n      <td>...</td>\n      <td>2</td>\n      <td>4</td>\n      <td>7</td>\n      <td>4</td>\n      <td>4</td>\n      <td>6</td>\n      <td>5</td>\n      <td>7</td>\n      <td>5</td>\n      <td>0.535</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>4</td>\n      <td>5</td>\n      <td>3</td>\n      <td>2</td>\n      <td>6</td>\n      <td>4</td>\n      <td>4</td>\n      <td>3</td>\n      <td>3</td>\n      <td>3</td>\n      <td>...</td>\n      <td>2</td>\n      <td>2</td>\n      <td>6</td>\n      <td>6</td>\n      <td>4</td>\n      <td>1</td>\n      <td>2</td>\n      <td>3</td>\n      <td>5</td>\n      <td>0.415</td>\n    </tr>\n  </tbody>\n</table>\n<p>5 rows × 22 columns</p>\n</div>"},"metadata":{}}]},{"cell_type":"code","source":"train_data.shape","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:30:15.124417Z","iopub.execute_input":"2024-05-11T11:30:15.126055Z","iopub.status.idle":"2024-05-11T11:30:15.133763Z","shell.execute_reply.started":"2024-05-11T11:30:15.126012Z","shell.execute_reply":"2024-05-11T11:30:15.132375Z"},"trusted":true},"execution_count":5,"outputs":[{"execution_count":5,"output_type":"execute_result","data":{"text/plain":"(1117957, 22)"},"metadata":{}}]},{"cell_type":"code","source":"train_data.info()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:30:21.696607Z","iopub.execute_input":"2024-05-11T11:30:21.697202Z","iopub.status.idle":"2024-05-11T11:30:21.746378Z","shell.execute_reply.started":"2024-05-11T11:30:21.697167Z","shell.execute_reply":"2024-05-11T11:30:21.745028Z"},"trusted":true},"execution_count":6,"outputs":[{"name":"stdout","text":"<class 'pandas.core.frame.DataFrame'>\nRangeIndex: 1117957 entries, 0 to 1117956\nData columns (total 22 columns):\n #   Column                           Non-Null Count    Dtype  \n---  ------                           --------------    -----  \n 0   id                               1117957 non-null  int64  \n 1   MonsoonIntensity                 1117957 non-null  int64  \n 2   TopographyDrainage               1117957 non-null  int64  \n 3   RiverManagement                  1117957 non-null  int64  \n 4   Deforestation                    1117957 non-null  int64  \n 5   Urbanization                     1117957 non-null  int64  \n 6   ClimateChange                    1117957 non-null  int64  \n 7   DamsQuality                      1117957 non-null  int64  \n 8   Siltation                        1117957 non-null  int64  \n 9   AgriculturalPractices            1117957 non-null  int64  \n 10  Encroachments                    1117957 non-null  int64  \n 11  IneffectiveDisasterPreparedness  1117957 non-null  int64  \n 12  DrainageSystems                  1117957 non-null  int64  \n 13  CoastalVulnerability             1117957 non-null  int64  \n 14  Landslides                       1117957 non-null  int64  \n 15  Watersheds                       1117957 non-null  int64  \n 16  DeterioratingInfrastructure      1117957 non-null  int64  \n 17  PopulationScore                  1117957 non-null  int64  \n 18  WetlandLoss                      1117957 non-null  int64  \n 19  InadequatePlanning               1117957 non-null  int64  \n 20  PoliticalFactors                 1117957 non-null  int64  \n 21  FloodProbability                 1117957 non-null  float64\ndtypes: float64(1), int64(21)\nmemory usage: 187.6 MB\n","output_type":"stream"}]},{"cell_type":"code","source":"train_data.isnull().sum()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:31:18.383795Z","iopub.execute_input":"2024-05-11T11:31:18.384238Z","iopub.status.idle":"2024-05-11T11:31:18.420384Z","shell.execute_reply.started":"2024-05-11T11:31:18.384207Z","shell.execute_reply":"2024-05-11T11:31:18.419075Z"},"trusted":true},"execution_count":8,"outputs":[{"execution_count":8,"output_type":"execute_result","data":{"text/plain":"id                                 0\nMonsoonIntensity                   0\nTopographyDrainage                 0\nRiverManagement                    0\nDeforestation                      0\nUrbanization                       0\nClimateChange                      0\nDamsQuality                        0\nSiltation                          0\nAgriculturalPractices              0\nEncroachments                      0\nIneffectiveDisasterPreparedness    0\nDrainageSystems                    0\nCoastalVulnerability               0\nLandslides                         0\nWatersheds                         0\nDeterioratingInfrastructure        0\nPopulationScore                    0\nWetlandLoss                        0\nInadequatePlanning                 0\nPoliticalFactors                   0\nFloodProbability                   0\ndtype: int64"},"metadata":{}}]},{"cell_type":"code","source":"train_data.describe().T","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:31:49.811311Z","iopub.execute_input":"2024-05-11T11:31:49.811712Z","iopub.status.idle":"2024-05-11T11:31:50.782343Z","shell.execute_reply.started":"2024-05-11T11:31:49.811682Z","shell.execute_reply":"2024-05-11T11:31:50.780998Z"},"trusted":true},"execution_count":10,"outputs":[{"execution_count":10,"output_type":"execute_result","data":{"text/plain":"                                     count           mean            std  \\\nid                               1117957.0  558978.000000  322726.531784   \nMonsoonIntensity                 1117957.0       4.921450       2.056387   \nTopographyDrainage               1117957.0       4.926671       2.093879   \nRiverManagement                  1117957.0       4.955322       2.072186   \nDeforestation                    1117957.0       4.942240       2.051689   \nUrbanization                     1117957.0       4.942517       2.083391   \nClimateChange                    1117957.0       4.934093       2.057742   \nDamsQuality                      1117957.0       4.955878       2.083063   \nSiltation                        1117957.0       4.927791       2.065992   \nAgriculturalPractices            1117957.0       4.942619       2.068545   \nEncroachments                    1117957.0       4.949230       2.083324   \nIneffectiveDisasterPreparedness  1117957.0       4.945239       2.078141   \nDrainageSystems                  1117957.0       4.946893       2.072333   \nCoastalVulnerability             1117957.0       4.953999       2.088899   \nLandslides                       1117957.0       4.931376       2.078287   \nWatersheds                       1117957.0       4.929032       2.082395   \nDeterioratingInfrastructure      1117957.0       4.925907       2.064813   \nPopulationScore                  1117957.0       4.927520       2.074176   \nWetlandLoss                      1117957.0       4.950859       2.068696   \nInadequatePlanning               1117957.0       4.940587       2.081123   \nPoliticalFactors                 1117957.0       4.939004       2.090350   \nFloodProbability                 1117957.0       0.504480       0.051026   \n\n                                   min        25%         50%        75%  \\\nid                               0.000  279489.00  558978.000  838467.00   \nMonsoonIntensity                 0.000       3.00       5.000       6.00   \nTopographyDrainage               0.000       3.00       5.000       6.00   \nRiverManagement                  0.000       4.00       5.000       6.00   \nDeforestation                    0.000       4.00       5.000       6.00   \nUrbanization                     0.000       3.00       5.000       6.00   \nClimateChange                    0.000       3.00       5.000       6.00   \nDamsQuality                      0.000       4.00       5.000       6.00   \nSiltation                        0.000       3.00       5.000       6.00   \nAgriculturalPractices            0.000       3.00       5.000       6.00   \nEncroachments                    0.000       4.00       5.000       6.00   \nIneffectiveDisasterPreparedness  0.000       3.00       5.000       6.00   \nDrainageSystems                  0.000       4.00       5.000       6.00   \nCoastalVulnerability             0.000       3.00       5.000       6.00   \nLandslides                       0.000       3.00       5.000       6.00   \nWatersheds                       0.000       3.00       5.000       6.00   \nDeterioratingInfrastructure      0.000       3.00       5.000       6.00   \nPopulationScore                  0.000       3.00       5.000       6.00   \nWetlandLoss                      0.000       4.00       5.000       6.00   \nInadequatePlanning               0.000       3.00       5.000       6.00   \nPoliticalFactors                 0.000       3.00       5.000       6.00   \nFloodProbability                 0.285       0.47       0.505       0.54   \n\n                                         max  \nid                               1117956.000  \nMonsoonIntensity                      16.000  \nTopographyDrainage                    18.000  \nRiverManagement                       16.000  \nDeforestation                         17.000  \nUrbanization                          17.000  \nClimateChange                         17.000  \nDamsQuality                           16.000  \nSiltation                             16.000  \nAgriculturalPractices                 16.000  \nEncroachments                         18.000  \nIneffectiveDisasterPreparedness       16.000  \nDrainageSystems                       17.000  \nCoastalVulnerability                  17.000  \nLandslides                            16.000  \nWatersheds                            16.000  \nDeterioratingInfrastructure           17.000  \nPopulationScore                       18.000  \nWetlandLoss                           19.000  \nInadequatePlanning                    16.000  \nPoliticalFactors                      16.000  \nFloodProbability                       0.725  ","text/html":"<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>count</th>\n      <th>mean</th>\n      <th>std</th>\n      <th>min</th>\n      <th>25%</th>\n      <th>50%</th>\n      <th>75%</th>\n      <th>max</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>id</th>\n      <td>1117957.0</td>\n      <td>558978.000000</td>\n      <td>322726.531784</td>\n      <td>0.000</td>\n      <td>279489.00</td>\n      <td>558978.000</td>\n      <td>838467.00</td>\n      <td>1117956.000</td>\n    </tr>\n    <tr>\n      <th>MonsoonIntensity</th>\n      <td>1117957.0</td>\n      <td>4.921450</td>\n      <td>2.056387</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>TopographyDrainage</th>\n      <td>1117957.0</td>\n      <td>4.926671</td>\n      <td>2.093879</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>18.000</td>\n    </tr>\n    <tr>\n      <th>RiverManagement</th>\n      <td>1117957.0</td>\n      <td>4.955322</td>\n      <td>2.072186</td>\n      <td>0.000</td>\n      <td>4.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>Deforestation</th>\n      <td>1117957.0</td>\n      <td>4.942240</td>\n      <td>2.051689</td>\n      <td>0.000</td>\n      <td>4.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>17.000</td>\n    </tr>\n    <tr>\n      <th>Urbanization</th>\n      <td>1117957.0</td>\n      <td>4.942517</td>\n      <td>2.083391</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>17.000</td>\n    </tr>\n    <tr>\n      <th>ClimateChange</th>\n      <td>1117957.0</td>\n      <td>4.934093</td>\n      <td>2.057742</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>17.000</td>\n    </tr>\n    <tr>\n      <th>DamsQuality</th>\n      <td>1117957.0</td>\n      <td>4.955878</td>\n      <td>2.083063</td>\n      <td>0.000</td>\n      <td>4.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>Siltation</th>\n      <td>1117957.0</td>\n      <td>4.927791</td>\n      <td>2.065992</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>AgriculturalPractices</th>\n      <td>1117957.0</td>\n      <td>4.942619</td>\n      <td>2.068545</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>Encroachments</th>\n      <td>1117957.0</td>\n      <td>4.949230</td>\n      <td>2.083324</td>\n      <td>0.000</td>\n      <td>4.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>18.000</td>\n    </tr>\n    <tr>\n      <th>IneffectiveDisasterPreparedness</th>\n      <td>1117957.0</td>\n      <td>4.945239</td>\n      <td>2.078141</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>DrainageSystems</th>\n      <td>1117957.0</td>\n      <td>4.946893</td>\n      <td>2.072333</td>\n      <td>0.000</td>\n      <td>4.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>17.000</td>\n    </tr>\n    <tr>\n      <th>CoastalVulnerability</th>\n      <td>1117957.0</td>\n      <td>4.953999</td>\n      <td>2.088899</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>17.000</td>\n    </tr>\n    <tr>\n      <th>Landslides</th>\n      <td>1117957.0</td>\n      <td>4.931376</td>\n      <td>2.078287</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>Watersheds</th>\n      <td>1117957.0</td>\n      <td>4.929032</td>\n      <td>2.082395</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>DeterioratingInfrastructure</th>\n      <td>1117957.0</td>\n      <td>4.925907</td>\n      <td>2.064813</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>17.000</td>\n    </tr>\n    <tr>\n      <th>PopulationScore</th>\n      <td>1117957.0</td>\n      <td>4.927520</td>\n      <td>2.074176</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>18.000</td>\n    </tr>\n    <tr>\n      <th>WetlandLoss</th>\n      <td>1117957.0</td>\n      <td>4.950859</td>\n      <td>2.068696</td>\n      <td>0.000</td>\n      <td>4.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>19.000</td>\n    </tr>\n    <tr>\n      <th>InadequatePlanning</th>\n      <td>1117957.0</td>\n      <td>4.940587</td>\n      <td>2.081123</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>PoliticalFactors</th>\n      <td>1117957.0</td>\n      <td>4.939004</td>\n      <td>2.090350</td>\n      <td>0.000</td>\n      <td>3.00</td>\n      <td>5.000</td>\n      <td>6.00</td>\n      <td>16.000</td>\n    </tr>\n    <tr>\n      <th>FloodProbability</th>\n      <td>1117957.0</td>\n      <td>0.504480</td>\n      <td>0.051026</td>\n      <td>0.285</td>\n      <td>0.47</td>\n      <td>0.505</td>\n      <td>0.54</td>\n      <td>0.725</td>\n    </tr>\n  </tbody>\n</table>\n</div>"},"metadata":{}}]},{"cell_type":"markdown","source":"**Explore Test Data**","metadata":{}},{"cell_type":"code","source":"test_data.head()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:33:07.715460Z","iopub.execute_input":"2024-05-11T11:33:07.715985Z","iopub.status.idle":"2024-05-11T11:33:07.741187Z","shell.execute_reply.started":"2024-05-11T11:33:07.715949Z","shell.execute_reply":"2024-05-11T11:33:07.739556Z"},"trusted":true},"execution_count":11,"outputs":[{"execution_count":11,"output_type":"execute_result","data":{"text/plain":"        id  MonsoonIntensity  TopographyDrainage  RiverManagement  \\\n0  1117957                 4                   6                3   \n1  1117958                 4                   4                2   \n2  1117959                 1                   3                6   \n3  1117960                 2                   4                4   \n4  1117961                 6                   3                2   \n\n   Deforestation  Urbanization  ClimateChange  DamsQuality  Siltation  \\\n0              5             6              7            8          7   \n1              9             5              5            4          7   \n2              5             7              2            4          6   \n3              6             4              5            4          3   \n4              4             6              4            5          5   \n\n   AgriculturalPractices  ...  IneffectiveDisasterPreparedness  \\\n0                      8  ...                                8   \n1                      5  ...                                2   \n2                      4  ...                                7   \n3                      4  ...                                7   \n4                      3  ...                                4   \n\n   DrainageSystems  CoastalVulnerability  Landslides  Watersheds  \\\n0                5                     7           5           6   \n1                4                     7           4           5   \n2                9                     2           5           5   \n3                8                     4           6           7   \n4                3                     2           6           4   \n\n   DeterioratingInfrastructure  PopulationScore  WetlandLoss  \\\n0                            3                6            4   \n1                            1                7            4   \n2                            2                3            6   \n3                            6                4            2   \n4                            6                8            4   \n\n   InadequatePlanning  PoliticalFactors  \n0                   4                 5  \n1                   4                 3  \n2                   8                 3  \n3                   4                 4  \n4                   5                 5  \n\n[5 rows x 21 columns]","text/html":"<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>id</th>\n      <th>MonsoonIntensity</th>\n      <th>TopographyDrainage</th>\n      <th>RiverManagement</th>\n      <th>Deforestation</th>\n      <th>Urbanization</th>\n      <th>ClimateChange</th>\n      <th>DamsQuality</th>\n      <th>Siltation</th>\n      <th>AgriculturalPractices</th>\n      <th>...</th>\n      <th>IneffectiveDisasterPreparedness</th>\n      <th>DrainageSystems</th>\n      <th>CoastalVulnerability</th>\n      <th>Landslides</th>\n      <th>Watersheds</th>\n      <th>DeterioratingInfrastructure</th>\n      <th>PopulationScore</th>\n      <th>WetlandLoss</th>\n      <th>InadequatePlanning</th>\n      <th>PoliticalFactors</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1117957</td>\n      <td>4</td>\n      <td>6</td>\n      <td>3</td>\n      <td>5</td>\n      <td>6</td>\n      <td>7</td>\n      <td>8</td>\n      <td>7</td>\n      <td>8</td>\n      <td>...</td>\n      <td>8</td>\n      <td>5</td>\n      <td>7</td>\n      <td>5</td>\n      <td>6</td>\n      <td>3</td>\n      <td>6</td>\n      <td>4</td>\n      <td>4</td>\n      <td>5</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>1117958</td>\n      <td>4</td>\n      <td>4</td>\n      <td>2</td>\n      <td>9</td>\n      <td>5</td>\n      <td>5</td>\n      <td>4</td>\n      <td>7</td>\n      <td>5</td>\n      <td>...</td>\n      <td>2</td>\n      <td>4</td>\n      <td>7</td>\n      <td>4</td>\n      <td>5</td>\n      <td>1</td>\n      <td>7</td>\n      <td>4</td>\n      <td>4</td>\n      <td>3</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>1117959</td>\n      <td>1</td>\n      <td>3</td>\n      <td>6</td>\n      <td>5</td>\n      <td>7</td>\n      <td>2</td>\n      <td>4</td>\n      <td>6</td>\n      <td>4</td>\n      <td>...</td>\n      <td>7</td>\n      <td>9</td>\n      <td>2</td>\n      <td>5</td>\n      <td>5</td>\n      <td>2</td>\n      <td>3</td>\n      <td>6</td>\n      <td>8</td>\n      <td>3</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>1117960</td>\n      <td>2</td>\n      <td>4</td>\n      <td>4</td>\n      <td>6</td>\n      <td>4</td>\n      <td>5</td>\n      <td>4</td>\n      <td>3</td>\n      <td>4</td>\n      <td>...</td>\n      <td>7</td>\n      <td>8</td>\n      <td>4</td>\n      <td>6</td>\n      <td>7</td>\n      <td>6</td>\n      <td>4</td>\n      <td>2</td>\n      <td>4</td>\n      <td>4</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>1117961</td>\n      <td>6</td>\n      <td>3</td>\n      <td>2</td>\n      <td>4</td>\n      <td>6</td>\n      <td>4</td>\n      <td>5</td>\n      <td>5</td>\n      <td>3</td>\n      <td>...</td>\n      <td>4</td>\n      <td>3</td>\n      <td>2</td>\n      <td>6</td>\n      <td>4</td>\n      <td>6</td>\n      <td>8</td>\n      <td>4</td>\n      <td>5</td>\n      <td>5</td>\n    </tr>\n  </tbody>\n</table>\n<p>5 rows × 21 columns</p>\n</div>"},"metadata":{}}]},{"cell_type":"code","source":"test_data.info()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:33:13.016506Z","iopub.execute_input":"2024-05-11T11:33:13.017043Z","iopub.status.idle":"2024-05-11T11:33:13.049964Z","shell.execute_reply.started":"2024-05-11T11:33:13.016999Z","shell.execute_reply":"2024-05-11T11:33:13.048802Z"},"trusted":true},"execution_count":12,"outputs":[{"name":"stdout","text":"<class 'pandas.core.frame.DataFrame'>\nRangeIndex: 745305 entries, 0 to 745304\nData columns (total 21 columns):\n #   Column                           Non-Null Count   Dtype\n---  ------                           --------------   -----\n 0   id                               745305 non-null  int64\n 1   MonsoonIntensity                 745305 non-null  int64\n 2   TopographyDrainage               745305 non-null  int64\n 3   RiverManagement                  745305 non-null  int64\n 4   Deforestation                    745305 non-null  int64\n 5   Urbanization                     745305 non-null  int64\n 6   ClimateChange                    745305 non-null  int64\n 7   DamsQuality                      745305 non-null  int64\n 8   Siltation                        745305 non-null  int64\n 9   AgriculturalPractices            745305 non-null  int64\n 10  Encroachments                    745305 non-null  int64\n 11  IneffectiveDisasterPreparedness  745305 non-null  int64\n 12  DrainageSystems                  745305 non-null  int64\n 13  CoastalVulnerability             745305 non-null  int64\n 14  Landslides                       745305 non-null  int64\n 15  Watersheds                       745305 non-null  int64\n 16  DeterioratingInfrastructure      745305 non-null  int64\n 17  PopulationScore                  745305 non-null  int64\n 18  WetlandLoss                      745305 non-null  int64\n 19  InadequatePlanning               745305 non-null  int64\n 20  PoliticalFactors                 745305 non-null  int64\ndtypes: int64(21)\nmemory usage: 119.4 MB\n","output_type":"stream"}]},{"cell_type":"code","source":"test_data.shape","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:33:20.333819Z","iopub.execute_input":"2024-05-11T11:33:20.334298Z","iopub.status.idle":"2024-05-11T11:33:20.343607Z","shell.execute_reply.started":"2024-05-11T11:33:20.334262Z","shell.execute_reply":"2024-05-11T11:33:20.341356Z"},"trusted":true},"execution_count":13,"outputs":[{"execution_count":13,"output_type":"execute_result","data":{"text/plain":"(745305, 21)"},"metadata":{}}]},{"cell_type":"code","source":"test_data.isnull().sum()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:33:30.793334Z","iopub.execute_input":"2024-05-11T11:33:30.793924Z","iopub.status.idle":"2024-05-11T11:33:30.815555Z","shell.execute_reply.started":"2024-05-11T11:33:30.793885Z","shell.execute_reply":"2024-05-11T11:33:30.814335Z"},"trusted":true},"execution_count":14,"outputs":[{"execution_count":14,"output_type":"execute_result","data":{"text/plain":"id                                 0\nMonsoonIntensity                   0\nTopographyDrainage                 0\nRiverManagement                    0\nDeforestation                      0\nUrbanization                       0\nClimateChange                      0\nDamsQuality                        0\nSiltation                          0\nAgriculturalPractices              0\nEncroachments                      0\nIneffectiveDisasterPreparedness    0\nDrainageSystems                    0\nCoastalVulnerability               0\nLandslides                         0\nWatersheds                         0\nDeterioratingInfrastructure        0\nPopulationScore                    0\nWetlandLoss                        0\nInadequatePlanning                 0\nPoliticalFactors                   0\ndtype: int64"},"metadata":{}}]},{"cell_type":"markdown","source":"**Train Logistic Regression Model**","metadata":{}},{"cell_type":"code","source":"from sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.metrics import r2_score","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:43:51.083061Z","iopub.execute_input":"2024-05-11T11:43:51.083629Z","iopub.status.idle":"2024-05-11T11:43:51.090500Z","shell.execute_reply.started":"2024-05-11T11:43:51.083596Z","shell.execute_reply":"2024-05-11T11:43:51.088830Z"},"trusted":true},"execution_count":32,"outputs":[]},{"cell_type":"code","source":"X = train_data.drop(['id', 'FloodProbability'], axis=1)\ny = train_data['FloodProbability']","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:43:53.245584Z","iopub.execute_input":"2024-05-11T11:43:53.246029Z","iopub.status.idle":"2024-05-11T11:43:53.324614Z","shell.execute_reply.started":"2024-05-11T11:43:53.245996Z","shell.execute_reply":"2024-05-11T11:43:53.323384Z"},"trusted":true},"execution_count":33,"outputs":[]},{"cell_type":"code","source":"X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:44:03.707368Z","iopub.execute_input":"2024-05-11T11:44:03.707834Z","iopub.status.idle":"2024-05-11T11:44:04.068327Z","shell.execute_reply.started":"2024-05-11T11:44:03.707799Z","shell.execute_reply":"2024-05-11T11:44:04.067257Z"},"trusted":true},"execution_count":34,"outputs":[]},{"cell_type":"code","source":"model = LinearRegression()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:44:07.835174Z","iopub.execute_input":"2024-05-11T11:44:07.835577Z","iopub.status.idle":"2024-05-11T11:44:07.841613Z","shell.execute_reply.started":"2024-05-11T11:44:07.835547Z","shell.execute_reply":"2024-05-11T11:44:07.840300Z"},"trusted":true},"execution_count":35,"outputs":[]},{"cell_type":"code","source":"model.fit(X_train, y_train)","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:44:10.438177Z","iopub.execute_input":"2024-05-11T11:44:10.438559Z","iopub.status.idle":"2024-05-11T11:44:11.622307Z","shell.execute_reply.started":"2024-05-11T11:44:10.438532Z","shell.execute_reply":"2024-05-11T11:44:11.620720Z"},"trusted":true},"execution_count":36,"outputs":[{"execution_count":36,"output_type":"execute_result","data":{"text/plain":"LinearRegression()","text/html":"<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: \"▸\";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: \"▾\";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: \"\";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id=\"sk-container-id-1\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>LinearRegression()</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-1\" type=\"checkbox\" checked><label for=\"sk-estimator-id-1\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">LinearRegression</label><div class=\"sk-toggleable__content\"><pre>LinearRegression()</pre></div></div></div></div></div>"},"metadata":{}}]},{"cell_type":"code","source":"y_pred = model.predict(X_test)","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:44:24.921658Z","iopub.execute_input":"2024-05-11T11:44:24.923082Z","iopub.status.idle":"2024-05-11T11:44:24.944923Z","shell.execute_reply.started":"2024-05-11T11:44:24.923036Z","shell.execute_reply":"2024-05-11T11:44:24.943271Z"},"trusted":true},"execution_count":37,"outputs":[]},{"cell_type":"code","source":"r2_score = r2_score(y_test, y_pred)\nprint(\"r2 score:\", r2_score)","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:44:58.309375Z","iopub.execute_input":"2024-05-11T11:44:58.309895Z","iopub.status.idle":"2024-05-11T11:44:58.322184Z","shell.execute_reply.started":"2024-05-11T11:44:58.309861Z","shell.execute_reply":"2024-05-11T11:44:58.320794Z"},"trusted":true},"execution_count":38,"outputs":[{"name":"stdout","text":"r2 score: 0.8433444717245547\n","output_type":"stream"}]},{"cell_type":"markdown","source":"**Submission**","metadata":{}},{"cell_type":"code","source":"test_df = test_data.drop(['id'], axis=1)\ny_pred_sub = model.predict(test_df)","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:46:16.909154Z","iopub.execute_input":"2024-05-11T11:46:16.909628Z","iopub.status.idle":"2024-05-11T11:46:17.041491Z","shell.execute_reply.started":"2024-05-11T11:46:16.909596Z","shell.execute_reply":"2024-05-11T11:46:17.039483Z"},"trusted":true},"execution_count":39,"outputs":[]},{"cell_type":"code","source":"submission = pd.DataFrame()\nsubmission['id'] = test_data['id']\nsubmission['FloodProbability'] = y_pred_sub","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:46:44.998480Z","iopub.execute_input":"2024-05-11T11:46:44.998916Z","iopub.status.idle":"2024-05-11T11:46:45.028144Z","shell.execute_reply.started":"2024-05-11T11:46:44.998884Z","shell.execute_reply":"2024-05-11T11:46:45.026522Z"},"trusted":true},"execution_count":41,"outputs":[]},{"cell_type":"code","source":"submission.head()","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:46:50.952833Z","iopub.execute_input":"2024-05-11T11:46:50.953252Z","iopub.status.idle":"2024-05-11T11:46:50.966924Z","shell.execute_reply.started":"2024-05-11T11:46:50.953219Z","shell.execute_reply":"2024-05-11T11:46:50.965853Z"},"trusted":true},"execution_count":42,"outputs":[{"execution_count":42,"output_type":"execute_result","data":{"text/plain":"        id  FloodProbability\n0  1117957          0.573586\n1  1117958          0.455162\n2  1117959          0.454716\n3  1117960          0.466196\n4  1117961          0.466052","text/html":"<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>id</th>\n      <th>FloodProbability</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1117957</td>\n      <td>0.573586</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>1117958</td>\n      <td>0.455162</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>1117959</td>\n      <td>0.454716</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>1117960</td>\n      <td>0.466196</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>1117961</td>\n      <td>0.466052</td>\n    </tr>\n  </tbody>\n</table>\n</div>"},"metadata":{}}]},{"cell_type":"code","source":"sub.to_csv('submission.csv', index=False)","metadata":{"execution":{"iopub.status.busy":"2024-05-11T11:47:07.432513Z","iopub.execute_input":"2024-05-11T11:47:07.433261Z","iopub.status.idle":"2024-05-11T11:47:09.990585Z","shell.execute_reply.started":"2024-05-11T11:47:07.433215Z","shell.execute_reply":"2024-05-11T11:47:09.988936Z"},"trusted":true},"execution_count":43,"outputs":[]}]}
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "9d505073",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:11.732569Z",
+     "iopub.status.busy": "2024-05-11T11:59:11.731752Z",
+     "iopub.status.idle": "2024-05-11T11:59:12.644942Z",
+     "shell.execute_reply": "2024-05-11T11:59:12.643574Z"
+    },
+    "papermill": {
+     "duration": 0.927182,
+     "end_time": "2024-05-11T11:59:12.647649",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:11.720467",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/kaggle/input/playground-series-s4e5/sample_submission.csv\n",
+      "/kaggle/input/playground-series-s4e5/train.csv\n",
+      "/kaggle/input/playground-series-s4e5/test.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1c50279f",
+   "metadata": {
+    "papermill": {
+     "duration": 0.00866,
+     "end_time": "2024-05-11T11:59:12.665521",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:12.656861",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ea1eafab",
+   "metadata": {
+    "papermill": {
+     "duration": 0.008518,
+     "end_time": "2024-05-11T11:59:12.682758",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:12.674240",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**Readin Data**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "a8cb8f53",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:12.702306Z",
+     "iopub.status.busy": "2024-05-11T11:59:12.701755Z",
+     "iopub.status.idle": "2024-05-11T11:59:16.856065Z",
+     "shell.execute_reply": "2024-05-11T11:59:16.854893Z"
+    },
+    "papermill": {
+     "duration": 4.167262,
+     "end_time": "2024-05-11T11:59:16.858895",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:12.691633",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "train_data = pd.read_csv('/kaggle/input/playground-series-s4e5/train.csv')\n",
+    "test_data = pd.read_csv('/kaggle/input/playground-series-s4e5/test.csv')\n",
+    "sub_data = pd.read_csv('/kaggle/input/playground-series-s4e5/sample_submission.csv')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7db305a9",
+   "metadata": {
+    "papermill": {
+     "duration": 0.009286,
+     "end_time": "2024-05-11T11:59:16.878966",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:16.869680",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**Explore Train Data**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "0c71597d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:16.898679Z",
+     "iopub.status.busy": "2024-05-11T11:59:16.898265Z",
+     "iopub.status.idle": "2024-05-11T11:59:16.933874Z",
+     "shell.execute_reply": "2024-05-11T11:59:16.932755Z"
+    },
+    "papermill": {
+     "duration": 0.04809,
+     "end_time": "2024-05-11T11:59:16.936280",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:16.888190",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>MonsoonIntensity</th>\n",
+       "      <th>TopographyDrainage</th>\n",
+       "      <th>RiverManagement</th>\n",
+       "      <th>Deforestation</th>\n",
+       "      <th>Urbanization</th>\n",
+       "      <th>ClimateChange</th>\n",
+       "      <th>DamsQuality</th>\n",
+       "      <th>Siltation</th>\n",
+       "      <th>AgriculturalPractices</th>\n",
+       "      <th>...</th>\n",
+       "      <th>DrainageSystems</th>\n",
+       "      <th>CoastalVulnerability</th>\n",
+       "      <th>Landslides</th>\n",
+       "      <th>Watersheds</th>\n",
+       "      <th>DeterioratingInfrastructure</th>\n",
+       "      <th>PopulationScore</th>\n",
+       "      <th>WetlandLoss</th>\n",
+       "      <th>InadequatePlanning</th>\n",
+       "      <th>PoliticalFactors</th>\n",
+       "      <th>FloodProbability</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>5</td>\n",
+       "      <td>8</td>\n",
+       "      <td>5</td>\n",
+       "      <td>8</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>...</td>\n",
+       "      <td>5</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>5</td>\n",
+       "      <td>4</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>7</td>\n",
+       "      <td>3</td>\n",
+       "      <td>0.445</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>6</td>\n",
+       "      <td>7</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>8</td>\n",
+       "      <td>8</td>\n",
+       "      <td>3</td>\n",
+       "      <td>5</td>\n",
+       "      <td>4</td>\n",
+       "      <td>...</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>3</td>\n",
+       "      <td>5</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "      <td>0.450</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>6</td>\n",
+       "      <td>5</td>\n",
+       "      <td>6</td>\n",
+       "      <td>7</td>\n",
+       "      <td>3</td>\n",
+       "      <td>7</td>\n",
+       "      <td>1</td>\n",
+       "      <td>5</td>\n",
+       "      <td>4</td>\n",
+       "      <td>...</td>\n",
+       "      <td>7</td>\n",
+       "      <td>3</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>6</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>0.530</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>5</td>\n",
+       "      <td>4</td>\n",
+       "      <td>8</td>\n",
+       "      <td>4</td>\n",
+       "      <td>7</td>\n",
+       "      <td>6</td>\n",
+       "      <td>...</td>\n",
+       "      <td>2</td>\n",
+       "      <td>4</td>\n",
+       "      <td>7</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>5</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>0.535</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4</td>\n",
+       "      <td>5</td>\n",
+       "      <td>3</td>\n",
+       "      <td>2</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>...</td>\n",
+       "      <td>2</td>\n",
+       "      <td>2</td>\n",
+       "      <td>6</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>5</td>\n",
+       "      <td>0.415</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 22 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   id  MonsoonIntensity  TopographyDrainage  RiverManagement  Deforestation  \\\n",
+       "0   0                 5                   8                5              8   \n",
+       "1   1                 6                   7                4              4   \n",
+       "2   2                 6                   5                6              7   \n",
+       "3   3                 3                   4                6              5   \n",
+       "4   4                 5                   3                2              6   \n",
+       "\n",
+       "   Urbanization  ClimateChange  DamsQuality  Siltation  AgriculturalPractices  \\\n",
+       "0             6              4            4          3                      3   \n",
+       "1             8              8            3          5                      4   \n",
+       "2             3              7            1          5                      4   \n",
+       "3             4              8            4          7                      6   \n",
+       "4             4              4            3          3                      3   \n",
+       "\n",
+       "   ...  DrainageSystems  CoastalVulnerability  Landslides  Watersheds  \\\n",
+       "0  ...                5                     3           3           5   \n",
+       "1  ...                7                     2           0           3   \n",
+       "2  ...                7                     3           7           5   \n",
+       "3  ...                2                     4           7           4   \n",
+       "4  ...                2                     2           6           6   \n",
+       "\n",
+       "   DeterioratingInfrastructure  PopulationScore  WetlandLoss  \\\n",
+       "0                            4                7            5   \n",
+       "1                            5                3            3   \n",
+       "2                            6                8            2   \n",
+       "3                            4                6            5   \n",
+       "4                            4                1            2   \n",
+       "\n",
+       "   InadequatePlanning  PoliticalFactors  FloodProbability  \n",
+       "0                   7                 3             0.445  \n",
+       "1                   4                 3             0.450  \n",
+       "2                   3                 3             0.530  \n",
+       "3                   7                 5             0.535  \n",
+       "4                   3                 5             0.415  \n",
+       "\n",
+       "[5 rows x 22 columns]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_data.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "bc05e9be",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:16.956712Z",
+     "iopub.status.busy": "2024-05-11T11:59:16.956306Z",
+     "iopub.status.idle": "2024-05-11T11:59:16.962849Z",
+     "shell.execute_reply": "2024-05-11T11:59:16.961839Z"
+    },
+    "papermill": {
+     "duration": 0.019536,
+     "end_time": "2024-05-11T11:59:16.965105",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:16.945569",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(1117957, 22)"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_data.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "6b6c82e2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:16.987386Z",
+     "iopub.status.busy": "2024-05-11T11:59:16.986982Z",
+     "iopub.status.idle": "2024-05-11T11:59:17.034544Z",
+     "shell.execute_reply": "2024-05-11T11:59:17.032869Z"
+    },
+    "papermill": {
+     "duration": 0.062095,
+     "end_time": "2024-05-11T11:59:17.036904",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:16.974809",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 1117957 entries, 0 to 1117956\n",
+      "Data columns (total 22 columns):\n",
+      " #   Column                           Non-Null Count    Dtype  \n",
+      "---  ------                           --------------    -----  \n",
+      " 0   id                               1117957 non-null  int64  \n",
+      " 1   MonsoonIntensity                 1117957 non-null  int64  \n",
+      " 2   TopographyDrainage               1117957 non-null  int64  \n",
+      " 3   RiverManagement                  1117957 non-null  int64  \n",
+      " 4   Deforestation                    1117957 non-null  int64  \n",
+      " 5   Urbanization                     1117957 non-null  int64  \n",
+      " 6   ClimateChange                    1117957 non-null  int64  \n",
+      " 7   DamsQuality                      1117957 non-null  int64  \n",
+      " 8   Siltation                        1117957 non-null  int64  \n",
+      " 9   AgriculturalPractices            1117957 non-null  int64  \n",
+      " 10  Encroachments                    1117957 non-null  int64  \n",
+      " 11  IneffectiveDisasterPreparedness  1117957 non-null  int64  \n",
+      " 12  DrainageSystems                  1117957 non-null  int64  \n",
+      " 13  CoastalVulnerability             1117957 non-null  int64  \n",
+      " 14  Landslides                       1117957 non-null  int64  \n",
+      " 15  Watersheds                       1117957 non-null  int64  \n",
+      " 16  DeterioratingInfrastructure      1117957 non-null  int64  \n",
+      " 17  PopulationScore                  1117957 non-null  int64  \n",
+      " 18  WetlandLoss                      1117957 non-null  int64  \n",
+      " 19  InadequatePlanning               1117957 non-null  int64  \n",
+      " 20  PoliticalFactors                 1117957 non-null  int64  \n",
+      " 21  FloodProbability                 1117957 non-null  float64\n",
+      "dtypes: float64(1), int64(21)\n",
+      "memory usage: 187.6 MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "train_data.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "1612d74c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:17.057916Z",
+     "iopub.status.busy": "2024-05-11T11:59:17.057097Z",
+     "iopub.status.idle": "2024-05-11T11:59:17.086382Z",
+     "shell.execute_reply": "2024-05-11T11:59:17.085269Z"
+    },
+    "papermill": {
+     "duration": 0.042947,
+     "end_time": "2024-05-11T11:59:17.089170",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:17.046223",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "id                                 0\n",
+       "MonsoonIntensity                   0\n",
+       "TopographyDrainage                 0\n",
+       "RiverManagement                    0\n",
+       "Deforestation                      0\n",
+       "Urbanization                       0\n",
+       "ClimateChange                      0\n",
+       "DamsQuality                        0\n",
+       "Siltation                          0\n",
+       "AgriculturalPractices              0\n",
+       "Encroachments                      0\n",
+       "IneffectiveDisasterPreparedness    0\n",
+       "DrainageSystems                    0\n",
+       "CoastalVulnerability               0\n",
+       "Landslides                         0\n",
+       "Watersheds                         0\n",
+       "DeterioratingInfrastructure        0\n",
+       "PopulationScore                    0\n",
+       "WetlandLoss                        0\n",
+       "InadequatePlanning                 0\n",
+       "PoliticalFactors                   0\n",
+       "FloodProbability                   0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_data.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "805cbe92",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:17.110946Z",
+     "iopub.status.busy": "2024-05-11T11:59:17.110476Z",
+     "iopub.status.idle": "2024-05-11T11:59:17.976493Z",
+     "shell.execute_reply": "2024-05-11T11:59:17.975383Z"
+    },
+    "papermill": {
+     "duration": 0.879692,
+     "end_time": "2024-05-11T11:59:17.979012",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:17.099320",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>count</th>\n",
+       "      <th>mean</th>\n",
+       "      <th>std</th>\n",
+       "      <th>min</th>\n",
+       "      <th>25%</th>\n",
+       "      <th>50%</th>\n",
+       "      <th>75%</th>\n",
+       "      <th>max</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>id</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>558978.000000</td>\n",
+       "      <td>322726.531784</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>279489.00</td>\n",
+       "      <td>558978.000</td>\n",
+       "      <td>838467.00</td>\n",
+       "      <td>1117956.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>MonsoonIntensity</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.921450</td>\n",
+       "      <td>2.056387</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>TopographyDrainage</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.926671</td>\n",
+       "      <td>2.093879</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>18.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>RiverManagement</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.955322</td>\n",
+       "      <td>2.072186</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>4.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Deforestation</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.942240</td>\n",
+       "      <td>2.051689</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>4.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>17.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Urbanization</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.942517</td>\n",
+       "      <td>2.083391</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>17.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>ClimateChange</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.934093</td>\n",
+       "      <td>2.057742</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>17.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>DamsQuality</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.955878</td>\n",
+       "      <td>2.083063</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>4.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Siltation</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.927791</td>\n",
+       "      <td>2.065992</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>AgriculturalPractices</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.942619</td>\n",
+       "      <td>2.068545</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Encroachments</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.949230</td>\n",
+       "      <td>2.083324</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>4.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>18.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>IneffectiveDisasterPreparedness</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.945239</td>\n",
+       "      <td>2.078141</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>DrainageSystems</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.946893</td>\n",
+       "      <td>2.072333</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>4.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>17.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>CoastalVulnerability</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.953999</td>\n",
+       "      <td>2.088899</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>17.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Landslides</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.931376</td>\n",
+       "      <td>2.078287</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Watersheds</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.929032</td>\n",
+       "      <td>2.082395</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>DeterioratingInfrastructure</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.925907</td>\n",
+       "      <td>2.064813</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>17.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>PopulationScore</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.927520</td>\n",
+       "      <td>2.074176</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>18.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>WetlandLoss</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.950859</td>\n",
+       "      <td>2.068696</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>4.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>19.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>InadequatePlanning</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.940587</td>\n",
+       "      <td>2.081123</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>PoliticalFactors</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>4.939004</td>\n",
+       "      <td>2.090350</td>\n",
+       "      <td>0.000</td>\n",
+       "      <td>3.00</td>\n",
+       "      <td>5.000</td>\n",
+       "      <td>6.00</td>\n",
+       "      <td>16.000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>FloodProbability</th>\n",
+       "      <td>1117957.0</td>\n",
+       "      <td>0.504480</td>\n",
+       "      <td>0.051026</td>\n",
+       "      <td>0.285</td>\n",
+       "      <td>0.47</td>\n",
+       "      <td>0.505</td>\n",
+       "      <td>0.54</td>\n",
+       "      <td>0.725</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                     count           mean            std  \\\n",
+       "id                               1117957.0  558978.000000  322726.531784   \n",
+       "MonsoonIntensity                 1117957.0       4.921450       2.056387   \n",
+       "TopographyDrainage               1117957.0       4.926671       2.093879   \n",
+       "RiverManagement                  1117957.0       4.955322       2.072186   \n",
+       "Deforestation                    1117957.0       4.942240       2.051689   \n",
+       "Urbanization                     1117957.0       4.942517       2.083391   \n",
+       "ClimateChange                    1117957.0       4.934093       2.057742   \n",
+       "DamsQuality                      1117957.0       4.955878       2.083063   \n",
+       "Siltation                        1117957.0       4.927791       2.065992   \n",
+       "AgriculturalPractices            1117957.0       4.942619       2.068545   \n",
+       "Encroachments                    1117957.0       4.949230       2.083324   \n",
+       "IneffectiveDisasterPreparedness  1117957.0       4.945239       2.078141   \n",
+       "DrainageSystems                  1117957.0       4.946893       2.072333   \n",
+       "CoastalVulnerability             1117957.0       4.953999       2.088899   \n",
+       "Landslides                       1117957.0       4.931376       2.078287   \n",
+       "Watersheds                       1117957.0       4.929032       2.082395   \n",
+       "DeterioratingInfrastructure      1117957.0       4.925907       2.064813   \n",
+       "PopulationScore                  1117957.0       4.927520       2.074176   \n",
+       "WetlandLoss                      1117957.0       4.950859       2.068696   \n",
+       "InadequatePlanning               1117957.0       4.940587       2.081123   \n",
+       "PoliticalFactors                 1117957.0       4.939004       2.090350   \n",
+       "FloodProbability                 1117957.0       0.504480       0.051026   \n",
+       "\n",
+       "                                   min        25%         50%        75%  \\\n",
+       "id                               0.000  279489.00  558978.000  838467.00   \n",
+       "MonsoonIntensity                 0.000       3.00       5.000       6.00   \n",
+       "TopographyDrainage               0.000       3.00       5.000       6.00   \n",
+       "RiverManagement                  0.000       4.00       5.000       6.00   \n",
+       "Deforestation                    0.000       4.00       5.000       6.00   \n",
+       "Urbanization                     0.000       3.00       5.000       6.00   \n",
+       "ClimateChange                    0.000       3.00       5.000       6.00   \n",
+       "DamsQuality                      0.000       4.00       5.000       6.00   \n",
+       "Siltation                        0.000       3.00       5.000       6.00   \n",
+       "AgriculturalPractices            0.000       3.00       5.000       6.00   \n",
+       "Encroachments                    0.000       4.00       5.000       6.00   \n",
+       "IneffectiveDisasterPreparedness  0.000       3.00       5.000       6.00   \n",
+       "DrainageSystems                  0.000       4.00       5.000       6.00   \n",
+       "CoastalVulnerability             0.000       3.00       5.000       6.00   \n",
+       "Landslides                       0.000       3.00       5.000       6.00   \n",
+       "Watersheds                       0.000       3.00       5.000       6.00   \n",
+       "DeterioratingInfrastructure      0.000       3.00       5.000       6.00   \n",
+       "PopulationScore                  0.000       3.00       5.000       6.00   \n",
+       "WetlandLoss                      0.000       4.00       5.000       6.00   \n",
+       "InadequatePlanning               0.000       3.00       5.000       6.00   \n",
+       "PoliticalFactors                 0.000       3.00       5.000       6.00   \n",
+       "FloodProbability                 0.285       0.47       0.505       0.54   \n",
+       "\n",
+       "                                         max  \n",
+       "id                               1117956.000  \n",
+       "MonsoonIntensity                      16.000  \n",
+       "TopographyDrainage                    18.000  \n",
+       "RiverManagement                       16.000  \n",
+       "Deforestation                         17.000  \n",
+       "Urbanization                          17.000  \n",
+       "ClimateChange                         17.000  \n",
+       "DamsQuality                           16.000  \n",
+       "Siltation                             16.000  \n",
+       "AgriculturalPractices                 16.000  \n",
+       "Encroachments                         18.000  \n",
+       "IneffectiveDisasterPreparedness       16.000  \n",
+       "DrainageSystems                       17.000  \n",
+       "CoastalVulnerability                  17.000  \n",
+       "Landslides                            16.000  \n",
+       "Watersheds                            16.000  \n",
+       "DeterioratingInfrastructure           17.000  \n",
+       "PopulationScore                       18.000  \n",
+       "WetlandLoss                           19.000  \n",
+       "InadequatePlanning                    16.000  \n",
+       "PoliticalFactors                      16.000  \n",
+       "FloodProbability                       0.725  "
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "train_data.describe().T"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6ec8dba2",
+   "metadata": {
+    "papermill": {
+     "duration": 0.009882,
+     "end_time": "2024-05-11T11:59:17.999418",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:17.989536",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**Explore Test Data**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "eb1ba1e1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:18.021310Z",
+     "iopub.status.busy": "2024-05-11T11:59:18.020936Z",
+     "iopub.status.idle": "2024-05-11T11:59:18.039809Z",
+     "shell.execute_reply": "2024-05-11T11:59:18.038712Z"
+    },
+    "papermill": {
+     "duration": 0.032646,
+     "end_time": "2024-05-11T11:59:18.042153",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:18.009507",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>MonsoonIntensity</th>\n",
+       "      <th>TopographyDrainage</th>\n",
+       "      <th>RiverManagement</th>\n",
+       "      <th>Deforestation</th>\n",
+       "      <th>Urbanization</th>\n",
+       "      <th>ClimateChange</th>\n",
+       "      <th>DamsQuality</th>\n",
+       "      <th>Siltation</th>\n",
+       "      <th>AgriculturalPractices</th>\n",
+       "      <th>...</th>\n",
+       "      <th>IneffectiveDisasterPreparedness</th>\n",
+       "      <th>DrainageSystems</th>\n",
+       "      <th>CoastalVulnerability</th>\n",
+       "      <th>Landslides</th>\n",
+       "      <th>Watersheds</th>\n",
+       "      <th>DeterioratingInfrastructure</th>\n",
+       "      <th>PopulationScore</th>\n",
+       "      <th>WetlandLoss</th>\n",
+       "      <th>InadequatePlanning</th>\n",
+       "      <th>PoliticalFactors</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1117957</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>3</td>\n",
+       "      <td>5</td>\n",
+       "      <td>6</td>\n",
+       "      <td>7</td>\n",
+       "      <td>8</td>\n",
+       "      <td>7</td>\n",
+       "      <td>8</td>\n",
+       "      <td>...</td>\n",
+       "      <td>8</td>\n",
+       "      <td>5</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>6</td>\n",
+       "      <td>3</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1117958</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>2</td>\n",
+       "      <td>9</td>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "      <td>4</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>...</td>\n",
+       "      <td>2</td>\n",
+       "      <td>4</td>\n",
+       "      <td>7</td>\n",
+       "      <td>4</td>\n",
+       "      <td>5</td>\n",
+       "      <td>1</td>\n",
+       "      <td>7</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>1117959</td>\n",
+       "      <td>1</td>\n",
+       "      <td>3</td>\n",
+       "      <td>6</td>\n",
+       "      <td>5</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>...</td>\n",
+       "      <td>7</td>\n",
+       "      <td>9</td>\n",
+       "      <td>2</td>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>6</td>\n",
+       "      <td>8</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1117960</td>\n",
+       "      <td>2</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>5</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>...</td>\n",
+       "      <td>7</td>\n",
+       "      <td>8</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>7</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>2</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>1117961</td>\n",
+       "      <td>6</td>\n",
+       "      <td>3</td>\n",
+       "      <td>2</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "      <td>3</td>\n",
+       "      <td>...</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "      <td>2</td>\n",
+       "      <td>6</td>\n",
+       "      <td>4</td>\n",
+       "      <td>6</td>\n",
+       "      <td>8</td>\n",
+       "      <td>4</td>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 21 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "        id  MonsoonIntensity  TopographyDrainage  RiverManagement  \\\n",
+       "0  1117957                 4                   6                3   \n",
+       "1  1117958                 4                   4                2   \n",
+       "2  1117959                 1                   3                6   \n",
+       "3  1117960                 2                   4                4   \n",
+       "4  1117961                 6                   3                2   \n",
+       "\n",
+       "   Deforestation  Urbanization  ClimateChange  DamsQuality  Siltation  \\\n",
+       "0              5             6              7            8          7   \n",
+       "1              9             5              5            4          7   \n",
+       "2              5             7              2            4          6   \n",
+       "3              6             4              5            4          3   \n",
+       "4              4             6              4            5          5   \n",
+       "\n",
+       "   AgriculturalPractices  ...  IneffectiveDisasterPreparedness  \\\n",
+       "0                      8  ...                                8   \n",
+       "1                      5  ...                                2   \n",
+       "2                      4  ...                                7   \n",
+       "3                      4  ...                                7   \n",
+       "4                      3  ...                                4   \n",
+       "\n",
+       "   DrainageSystems  CoastalVulnerability  Landslides  Watersheds  \\\n",
+       "0                5                     7           5           6   \n",
+       "1                4                     7           4           5   \n",
+       "2                9                     2           5           5   \n",
+       "3                8                     4           6           7   \n",
+       "4                3                     2           6           4   \n",
+       "\n",
+       "   DeterioratingInfrastructure  PopulationScore  WetlandLoss  \\\n",
+       "0                            3                6            4   \n",
+       "1                            1                7            4   \n",
+       "2                            2                3            6   \n",
+       "3                            6                4            2   \n",
+       "4                            6                8            4   \n",
+       "\n",
+       "   InadequatePlanning  PoliticalFactors  \n",
+       "0                   4                 5  \n",
+       "1                   4                 3  \n",
+       "2                   8                 3  \n",
+       "3                   4                 4  \n",
+       "4                   5                 5  \n",
+       "\n",
+       "[5 rows x 21 columns]"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "test_data.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "09de052c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:18.065293Z",
+     "iopub.status.busy": "2024-05-11T11:59:18.064921Z",
+     "iopub.status.idle": "2024-05-11T11:59:18.091189Z",
+     "shell.execute_reply": "2024-05-11T11:59:18.089647Z"
+    },
+    "papermill": {
+     "duration": 0.041201,
+     "end_time": "2024-05-11T11:59:18.093965",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:18.052764",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 745305 entries, 0 to 745304\n",
+      "Data columns (total 21 columns):\n",
+      " #   Column                           Non-Null Count   Dtype\n",
+      "---  ------                           --------------   -----\n",
+      " 0   id                               745305 non-null  int64\n",
+      " 1   MonsoonIntensity                 745305 non-null  int64\n",
+      " 2   TopographyDrainage               745305 non-null  int64\n",
+      " 3   RiverManagement                  745305 non-null  int64\n",
+      " 4   Deforestation                    745305 non-null  int64\n",
+      " 5   Urbanization                     745305 non-null  int64\n",
+      " 6   ClimateChange                    745305 non-null  int64\n",
+      " 7   DamsQuality                      745305 non-null  int64\n",
+      " 8   Siltation                        745305 non-null  int64\n",
+      " 9   AgriculturalPractices            745305 non-null  int64\n",
+      " 10  Encroachments                    745305 non-null  int64\n",
+      " 11  IneffectiveDisasterPreparedness  745305 non-null  int64\n",
+      " 12  DrainageSystems                  745305 non-null  int64\n",
+      " 13  CoastalVulnerability             745305 non-null  int64\n",
+      " 14  Landslides                       745305 non-null  int64\n",
+      " 15  Watersheds                       745305 non-null  int64\n",
+      " 16  DeterioratingInfrastructure      745305 non-null  int64\n",
+      " 17  PopulationScore                  745305 non-null  int64\n",
+      " 18  WetlandLoss                      745305 non-null  int64\n",
+      " 19  InadequatePlanning               745305 non-null  int64\n",
+      " 20  PoliticalFactors                 745305 non-null  int64\n",
+      "dtypes: int64(21)\n",
+      "memory usage: 119.4 MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "test_data.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "aeb45dfb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:18.117547Z",
+     "iopub.status.busy": "2024-05-11T11:59:18.117181Z",
+     "iopub.status.idle": "2024-05-11T11:59:18.124456Z",
+     "shell.execute_reply": "2024-05-11T11:59:18.123007Z"
+    },
+    "papermill": {
+     "duration": 0.021882,
+     "end_time": "2024-05-11T11:59:18.126911",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:18.105029",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(745305, 21)"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "test_data.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "43f36431",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:18.151038Z",
+     "iopub.status.busy": "2024-05-11T11:59:18.150626Z",
+     "iopub.status.idle": "2024-05-11T11:59:18.171433Z",
+     "shell.execute_reply": "2024-05-11T11:59:18.170381Z"
+    },
+    "papermill": {
+     "duration": 0.035488,
+     "end_time": "2024-05-11T11:59:18.173725",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:18.138237",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "id                                 0\n",
+       "MonsoonIntensity                   0\n",
+       "TopographyDrainage                 0\n",
+       "RiverManagement                    0\n",
+       "Deforestation                      0\n",
+       "Urbanization                       0\n",
+       "ClimateChange                      0\n",
+       "DamsQuality                        0\n",
+       "Siltation                          0\n",
+       "AgriculturalPractices              0\n",
+       "Encroachments                      0\n",
+       "IneffectiveDisasterPreparedness    0\n",
+       "DrainageSystems                    0\n",
+       "CoastalVulnerability               0\n",
+       "Landslides                         0\n",
+       "Watersheds                         0\n",
+       "DeterioratingInfrastructure        0\n",
+       "PopulationScore                    0\n",
+       "WetlandLoss                        0\n",
+       "InadequatePlanning                 0\n",
+       "PoliticalFactors                   0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "test_data.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "97bf8444",
+   "metadata": {
+    "papermill": {
+     "duration": 0.010838,
+     "end_time": "2024-05-11T11:59:18.195483",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:18.184645",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**Train Logistic Regression Model**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "3974eb2f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:18.218855Z",
+     "iopub.status.busy": "2024-05-11T11:59:18.218397Z",
+     "iopub.status.idle": "2024-05-11T11:59:19.554441Z",
+     "shell.execute_reply": "2024-05-11T11:59:19.553465Z"
+    },
+    "papermill": {
+     "duration": 1.35065,
+     "end_time": "2024-05-11T11:59:19.557105",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:18.206455",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.linear_model import LinearRegression\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.metrics import r2_score"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "89aa84d4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:19.582159Z",
+     "iopub.status.busy": "2024-05-11T11:59:19.581146Z",
+     "iopub.status.idle": "2024-05-11T11:59:19.654256Z",
+     "shell.execute_reply": "2024-05-11T11:59:19.653221Z"
+    },
+    "papermill": {
+     "duration": 0.088561,
+     "end_time": "2024-05-11T11:59:19.657055",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:19.568494",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "X = train_data.drop(['id', 'FloodProbability'], axis=1)\n",
+    "y = train_data['FloodProbability']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "d22cecfd",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:19.681657Z",
+     "iopub.status.busy": "2024-05-11T11:59:19.680582Z",
+     "iopub.status.idle": "2024-05-11T11:59:19.975118Z",
+     "shell.execute_reply": "2024-05-11T11:59:19.973842Z"
+    },
+    "papermill": {
+     "duration": 0.309683,
+     "end_time": "2024-05-11T11:59:19.977960",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:19.668277",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "6dbd2237",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:20.002304Z",
+     "iopub.status.busy": "2024-05-11T11:59:20.001862Z",
+     "iopub.status.idle": "2024-05-11T11:59:20.006734Z",
+     "shell.execute_reply": "2024-05-11T11:59:20.005715Z"
+    },
+    "papermill": {
+     "duration": 0.01964,
+     "end_time": "2024-05-11T11:59:20.009042",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:19.989402",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model = LinearRegression()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "4c7e573b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:20.033924Z",
+     "iopub.status.busy": "2024-05-11T11:59:20.032989Z",
+     "iopub.status.idle": "2024-05-11T11:59:21.210474Z",
+     "shell.execute_reply": "2024-05-11T11:59:21.209558Z"
+    },
+    "papermill": {
+     "duration": 1.194339,
+     "end_time": "2024-05-11T11:59:21.215040",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:20.020701",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: \"▸\";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: \"▾\";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: \"\";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id=\"sk-container-id-1\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>LinearRegression()</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-1\" type=\"checkbox\" checked><label for=\"sk-estimator-id-1\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">LinearRegression</label><div class=\"sk-toggleable__content\"><pre>LinearRegression()</pre></div></div></div></div></div>"
+      ],
+      "text/plain": [
+       "LinearRegression()"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model.fit(X_train, y_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "965a338b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:21.240690Z",
+     "iopub.status.busy": "2024-05-11T11:59:21.239714Z",
+     "iopub.status.idle": "2024-05-11T11:59:21.260000Z",
+     "shell.execute_reply": "2024-05-11T11:59:21.258402Z"
+    },
+    "papermill": {
+     "duration": 0.037557,
+     "end_time": "2024-05-11T11:59:21.264324",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.226767",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "y_pred = model.predict(X_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "c8b4c74f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:21.319750Z",
+     "iopub.status.busy": "2024-05-11T11:59:21.319101Z",
+     "iopub.status.idle": "2024-05-11T11:59:21.335598Z",
+     "shell.execute_reply": "2024-05-11T11:59:21.334162Z"
+    },
+    "papermill": {
+     "duration": 0.051111,
+     "end_time": "2024-05-11T11:59:21.340057",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.288946",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "r2 score: 0.8433444717245547\n"
+     ]
+    }
+   ],
+   "source": [
+    "r2_score = r2_score(y_test, y_pred)\n",
+    "print(\"r2 score:\", r2_score)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e173684b",
+   "metadata": {
+    "papermill": {
+     "duration": 0.017254,
+     "end_time": "2024-05-11T11:59:21.382162",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.364908",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**Submission**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "fd8c0599",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:21.407652Z",
+     "iopub.status.busy": "2024-05-11T11:59:21.406312Z",
+     "iopub.status.idle": "2024-05-11T11:59:21.513352Z",
+     "shell.execute_reply": "2024-05-11T11:59:21.511567Z"
+    },
+    "papermill": {
+     "duration": 0.123907,
+     "end_time": "2024-05-11T11:59:21.517626",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.393719",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "test_df = test_data.drop(['id'], axis=1)\n",
+    "y_pred_sub = model.predict(test_df)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "6bd05853",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:21.569059Z",
+     "iopub.status.busy": "2024-05-11T11:59:21.568273Z",
+     "iopub.status.idle": "2024-05-11T11:59:21.613318Z",
+     "shell.execute_reply": "2024-05-11T11:59:21.611791Z"
+    },
+    "papermill": {
+     "duration": 0.075579,
+     "end_time": "2024-05-11T11:59:21.617533",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.541954",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "submission = pd.DataFrame()\n",
+    "submission['id'] = test_data['id']\n",
+    "submission['FloodProbability'] = y_pred_sub"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "ea75ab2d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:21.649109Z",
+     "iopub.status.busy": "2024-05-11T11:59:21.648660Z",
+     "iopub.status.idle": "2024-05-11T11:59:21.660084Z",
+     "shell.execute_reply": "2024-05-11T11:59:21.658912Z"
+    },
+    "papermill": {
+     "duration": 0.026807,
+     "end_time": "2024-05-11T11:59:21.662442",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.635635",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>FloodProbability</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1117957</td>\n",
+       "      <td>0.573586</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1117958</td>\n",
+       "      <td>0.455162</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>1117959</td>\n",
+       "      <td>0.454716</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1117960</td>\n",
+       "      <td>0.466196</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>1117961</td>\n",
+       "      <td>0.466052</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "        id  FloodProbability\n",
+       "0  1117957          0.573586\n",
+       "1  1117958          0.455162\n",
+       "2  1117959          0.454716\n",
+       "3  1117960          0.466196\n",
+       "4  1117961          0.466052"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "submission.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "73bbe4bc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-05-11T11:59:21.688116Z",
+     "iopub.status.busy": "2024-05-11T11:59:21.687686Z",
+     "iopub.status.idle": "2024-05-11T11:59:24.086898Z",
+     "shell.execute_reply": "2024-05-11T11:59:24.085993Z"
+    },
+    "papermill": {
+     "duration": 2.415186,
+     "end_time": "2024-05-11T11:59:24.089488",
+     "exception": false,
+     "start_time": "2024-05-11T11:59:21.674302",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "submission.to_csv('submission.csv', index=False)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "databundleVersionId": 8121328,
+     "sourceId": 73278,
+     "sourceType": "competition"
+    }
+   ],
+   "dockerImageVersionId": 30698,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 15.877553,
+   "end_time": "2024-05-11T11:59:24.621926",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-05-11T11:59:08.744373",
+   "version": "2.5.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
